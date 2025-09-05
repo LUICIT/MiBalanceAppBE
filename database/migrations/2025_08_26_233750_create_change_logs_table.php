@@ -12,10 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('change_logs', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
+            $table->id();
 
+            $table->unsignedBigInteger('user_id');
             $table->string('table_name');
-            $table->uuid('table_id');
+            $table->unsignedBigInteger('table_id');
             $table->bigInteger('version');
             $table->string('operation'); // e.g., 'create', 'update', 'delete'
             $table->json('diff')->default('[]');

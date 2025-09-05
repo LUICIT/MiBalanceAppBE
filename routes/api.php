@@ -1,6 +1,7 @@
 <?php
 
-use App\Http\Controllers\api\AuthController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PeriodController;
 use Illuminate\Support\Facades\Route;
 
 Route::get("/status", function () {
@@ -19,6 +20,12 @@ Route::group(['prefix' => 'v1/auth'], function () {
         Route::post('/logoutAll', [AuthController::class, 'logoutAll']); // revoca todos los tokens
     });
 
+});
+
+Route::group(['prefix' => 'v1'], function () {
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::apiResource('/periods', PeriodController::class);
+    });
 });
 
 

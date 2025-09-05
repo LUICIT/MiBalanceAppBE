@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('concepts', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('user_id')->nullable()->constrained('users');
 
             $table->string('name', 100)->unique();
             $table->string('type_period', 75); // e.g., 'percepción', 'deducción'

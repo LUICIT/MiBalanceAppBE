@@ -2,6 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Bill;
+use App\Models\Concept;
+use App\Models\Movement;
+use App\Models\Period;
+use App\Models\User;
+use App\Observers\VersionedObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +25,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        User::observe(VersionedObserver::class);
+        Period::observe(VersionedObserver::class);
+        Concept::observe(VersionedObserver::class);
+        Movement::observe(VersionedObserver::class);
+        Bill::observe(VersionedObserver::class);
     }
 }

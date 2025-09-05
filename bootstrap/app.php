@@ -2,7 +2,8 @@
 
 use App\Exceptions\InvalidCredentialsException;
 use App\Http\Middleware\HandleRequestId;
-use App\Http\Responses\ApiResponse;
+use App\Providers\RepositoryServiceProvider;
+use App\Support\ApiResponse;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\QueryException;
@@ -27,14 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(HandleRequestId::class);
         $middleware->append(HandleCors::class);
         $middleware->appendToGroup('api', SubstituteBindings::class);
-//        $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
-
-        /*$middleware->web(append: [
-            HandleAppearance::class,
-            HandleInertiaRequests::class,
-            AddLinkHeadersForPreloadedAssets::class,
-        ]);*/
     })
+    ->withProviders([
+        RepositoryServiceProvider::class
+    ])
     ->withExceptions(function (Exceptions $exceptions) {
         // 401 – Credenciales inválidas
         $exceptions->renderable(function (InvalidCredentialsException $e) {
@@ -61,8 +58,21 @@ return Application::configure(basePath: dirname(__DIR__))
             return ApiResponse::fail('method_not_allowed', __('errors.method_not_allowed'), 405);
         });
 
-        // 422 – Errores de validación (FormRequest o $request->validate)
+        // 422/409 – Errores de validación (FormRequest o $request->validate)
         $exceptions->renderable(function (ValidationException $e) {
+            // -- Detecta si alguna regla fallida es Unique
+            $failed = $e->validator?->failed() ?? [];   // ['field' => ['Unique' => [...], 'Required' => [...]]]
+            $hasUnique = collect($failed)->contains(
+                fn (array $rules) => array_key_exists('Unique', $rules) || array_key_exists('unique', $rules)
+            );
+
+            if ($hasUnique) {
+                return ApiResponse::fail('conflict', __('errors.conflict'), 409, [
+                    'errors' => $e->errors(), // mantiene el detalle por campo
+                ]);
+            }
+
+            // default: 422
             return ApiResponse::fail('validation_error', __('errors.validation_error'), 422, [
                 'errors' => $e->errors(),
             ]);
@@ -79,12 +89,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->renderable(function (QueryException $e) {
             // Puedes mapear violaciones UNIQUE a 409 (conflict)
             if (str_contains(strtolower($e->getMessage()), 'unique')) {
-                return ApiResponse::fail('conflict', __('errors.conflict'), 409);
+                return ApiResponse::fail('conflict', __('errors.conflict'), 409, [
+                    'error' => $e->getMessage(),
+                ]);
             }
-            return ApiResponse::fail('database_error', __('errors.database_error'), 500);
+            return ApiResponse::fail('database_error', __('errors.database_error'), 500, [
+                'error' => $e->getMessage(),
+            ]);
         });
 
-        // Fallback (cualquier otra excepción no manejada)
+        /*// Fallback (cualquier otra excepción no manejada)
         $exceptions->renderable(function (\Throwable $e) {
             if (config('app.debug')) {
                 // En DEBUG adjunta traza acotada (útil en dev)
@@ -93,5 +107,5 @@ return Application::configure(basePath: dirname(__DIR__))
                 ]);
             }
             return ApiResponse::fail('server_error', __('errors.server_error'), 500);
-        });
+        });*/
     })->create();

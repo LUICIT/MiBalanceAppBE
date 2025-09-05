@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Traits\Versionable;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -13,7 +14,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
+    use HasFactory, Notifiable, HasApiTokens, SoftDeletes, Versionable;
 
     /**
      * The attributes that are mass assignable.
@@ -22,8 +23,8 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'names',
-        'father_name',
-        'mother_name',
+        'father_surname',
+        'mother_surname',
         'birthday',
         'version',
         'email',
@@ -38,6 +39,10 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'email_verified_at',
+        'created_at',
+        'updated_at',
+        'deleted_at'
     ];
 
     /**
@@ -48,6 +53,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'birthday' => 'date',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\api;
+namespace App\Http\Controllers\Api;
 
 use App\Exceptions\InvalidCredentialsException;
 use App\Http\Controllers\Controller;
-use App\Http\Responses\ApiResponse;
 use App\Models\User;
+use App\Support\ApiResponse;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -38,8 +38,8 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'names' => 'required|string|max:100',
-            'father_name' => 'required|string|max:50',
-            'mother_name' => 'nullable|string|max:50',
+            'father_surname' => 'required|string|max:50',
+            'mother_surname' => 'nullable|string|max:50',
             'birthday' => 'date',
             'email' => 'required|string|lowercase|email|unique:' . User::class,
             'password' => ['required', 'confirmed', Password::defaults()],
@@ -47,8 +47,8 @@ class AuthController extends Controller
 
         $user = User::create([
             'names' => $data['names'],
-            'father_name' => $data['father_name'],
-            'mother_name' => $data['mother_name'],
+            'father_surname' => $data['father_surname'],
+            'mother_surname' => $data['mother_surname'],
             'birthday' => $data['birthday'],
             'email' => $data['email'],
             'password' => Hash::make($data['password'])
@@ -56,23 +56,13 @@ class AuthController extends Controller
 
         event(new Registered($user));
 
-        // Opcional: auto-login tras registro
-        /*$token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'User registered successfully',
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user,
-        ], 201);*/
-
         return ApiResponse::ok('Usuario registrado correctamente.', 201);
     }
 
     public function profile()
     {
         $user = Auth::user();
-        return ApiResponse::ok($user, 201);
+        return ApiResponse::ok($user);
     }
 
     public function logout()

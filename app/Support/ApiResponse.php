@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Responses;
+namespace App\Support;
 
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Response;
 class ApiResponse
 {
 
-    public static function login(User $user, string $token, string $token_type = 'Bearer', string $code = 'success', int $status = 200): JsonResponse
+    public static function login(User $user, string $token, string $token_type = 'Bearer', int $status = 200, string $code = 'success'): JsonResponse
     {
         return Response::json([
             'ok'            => true,
@@ -23,7 +23,7 @@ class ApiResponse
         ], $status);
     }
 
-    public static function ok(mixed $data = [], string $code = 'success', int $status = 200): JsonResponse
+    public static function ok(mixed $data = [], int $status = 200, string $code = 'success'): JsonResponse
     {
         return Response::json([
             'ok'            => true,

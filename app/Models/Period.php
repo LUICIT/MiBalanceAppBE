@@ -2,12 +2,25 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
-class Period extends Model
+class Period extends BaseModel
 {
 
-    use SoftDeletes;
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'user_id',
+        'code',
+        'type_period',
+        'payment_date',
+        'notes',
+        'version',
+    ];
+
+    protected $casts = [
+        'payment_date' => 'date',
+    ];
 
 }
