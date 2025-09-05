@@ -3,29 +3,31 @@
 namespace App\Services;
 
 use App\Helpers\HelperPaginate;
+use App\Interfaces\PeriodRepositoryInterface;
+use App\Interfaces\PeriodServiceInterface;
 use App\Models\Period;
-use App\Repositories\Contracts\PeriodRepositoryInterface;
-use App\Services\Contracts\PeriodServiceInterface;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
-class PeriodService implements PeriodServiceInterface
+readonly class PeriodService implements PeriodServiceInterface
 {
 
-    public function __construct(private readonly PeriodRepositoryInterface $repository)
+    public function __construct(private PeriodRepositoryInterface $repository)
     {
     }
 
-    public function paginate(int $userId, array $filters = [], int $perPage = 20): HelperPaginate
+    public function paginate(array $filters = [], int $perPage = 20): HelperPaginate
     {
-        return $this->repository->paginateForUser($userId, $filters, $perPage);
+        return $this->repository->paginateForUser($this->userIdOrFail(), $filters, $perPage);
     }
 
-    public function getOrFail(int $userId, int $id): Period
+    public function getOrFail(int $id): Period
     {
-        $p = $this->repository->findForUser($userId, $id);
+        $p = $this->repository->findForUser($this->userIdOrFail(), $id);
         if (!$p) {
-            throw new HttpException(404, 'Periodo no encontrado'); // Handler lo formatea
+            throw new NotFoundHttpException();
         }
         return $p;
     }
@@ -33,33 +35,36 @@ class PeriodService implements PeriodServiceInterface
     /**
      * @throws Throwable
      */
-    public function create(int $userId, array $data): Period
+    public function create(array $data): Period
     {
         // Validaciones de dominio/negocio adicionales
-        if ($this->repository->existsCodeForUser($userId, $data['code'])) {
-            throw new HttpException(409, 'La clave del periodo ya existe');
-        }
 
-        return DB::transaction(function () use ($userId, $data) {
-            $data['user_id'] = $userId;
+        return DB::transaction(function () use ($data) {
+            $data['user_id'] = $this->userIdOrFail();
             return $this->repository->create($data);
         });
     }
 
-    public function update(int $userId, int $id, array $data): Period
+    /**
+     * @throws Throwable
+     */
+    public function update(int $id, array $data): Period
     {
-        $periodo = $this->getOrFail($userId, $id);
-
-        if (isset($data['code']) && $this->repository->existsCodeForUser($userId, $data['code'], $id)) {
-            throw new HttpException(409, 'La clave del periodo ya existe');
-        }
-
-        return DB::transaction(fn() => $this->repository->update($periodo, $data));
+        $period = $this->getOrFail($id);
+        return DB::transaction(fn() => $this->repository->update($period, $data));
     }
 
-    public function delete(int $userId, int $id): void
+    /**
+     * @throws Throwable
+     */
+    public function delete(int $id): void
     {
-        $periodo = $this->getOrFail($userId, $id);
-        DB::transaction(fn() => $this->repository->delete($periodo));
+        $period = $this->getOrFail($id);
+        DB::transaction(fn() => $this->repository->delete($period));
+    }
+
+    private function userIdOrFail(): int
+    {
+        return (int)Auth::id();
     }
 }

@@ -3,7 +3,7 @@
 namespace App\Helpers;
 
 use App\Classes\CustomPaginate;
-use App\Interfaces\PaginatorContract;
+use App\Contracts\PaginatorContract;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Pagination\Paginator;

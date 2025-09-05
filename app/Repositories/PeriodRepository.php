@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Repositories\Eloquent;
+namespace App\Repositories;
 
 use App\Helpers\HelperPaginate;
+use App\Interfaces\PeriodRepositoryInterface;
 use App\Models\Period;
-use App\Repositories\Contracts\PeriodRepositoryInterface;
 use Illuminate\Contracts\Container\BindingResolutionException;
 
 class PeriodRepository implements PeriodRepositoryInterface
@@ -29,21 +29,12 @@ class PeriodRepository implements PeriodRepositoryInterface
 
     public function findForUser(int $userId, int $id): ?Period
     {
-        return Period::where('user_id', $userId)->find($id);
-    }
-
-    public function existsCodeForUser(int $userId, string $code, ?int $exceptId = null): bool
-    {
-        $q = Period::where('user_id', $userId)->where('code', $code);
-        if ($exceptId) {
-            $q->where('id', '<>', $exceptId);
-        }
-        return $q->exists();
+        return Period::query()->where('user_id', $userId)->find($id);
     }
 
     public function create(array $data): Period
     {
-        return Period::create($data); // Versionable + Observer registran change_log
+        return Period::query()->create($data); // Versionable + Observer registran change_log
     }
 
     public function update(Period $period, array $data): Period

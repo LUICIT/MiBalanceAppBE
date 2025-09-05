@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Interfaces;
+namespace App\Contracts;
 
 use Illuminate\Contracts\Support\Arrayable;
 use JsonSerializable;

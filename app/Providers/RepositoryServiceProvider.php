@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use App\Repositories\Contracts\PeriodRepositoryInterface;
-use App\Repositories\Eloquent\PeriodRepository;
+use App\Interfaces\PeriodRepositoryInterface;
+use App\Repositories\PeriodRepository;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
